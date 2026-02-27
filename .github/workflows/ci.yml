@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out widget-sdk
+        uses: actions/checkout@v4
+        with:
+          repository: duh-dashboard/widget-sdk
+          path: widget-sdk
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cmake ninja-build qt6-base-dev
+
+      - name: Build & install widget-sdk
+        run: |
+          cmake -S widget-sdk -B build/sdk -G Ninja \
+            -DCMAKE_INSTALL_PREFIX=$HOME/.local
+          cmake --build build/sdk
+          cmake --install build/sdk
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH=$HOME/.local
+
+      - name: Build
+        run: cmake --build build --parallel
